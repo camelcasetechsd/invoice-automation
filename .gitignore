@@ -1,0 +1,7 @@
+nbproject
+._*
+.~lock.*
+/vendor/
+*.xlsx
+*.docx
+!template/invoiceTemplate.docx
