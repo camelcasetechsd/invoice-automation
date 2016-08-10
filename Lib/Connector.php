@@ -1,5 +1,5 @@
 <?php
-namespace Timesheet\lib;
+namespace InvoiceAutomation\Lib;
 
 class Connector
 {

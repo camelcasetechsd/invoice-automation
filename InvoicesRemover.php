@@ -1,14 +1,14 @@
 <?php
 
-namespace Timesheet;
+namespace InvoiceAutomation;
 
 require 'vendor/autoload.php';
 require 'Lib/Connector.php';
 require 'Lib/Logger.php';
 require 'Lib/Calculator.php';
-use Timesheet\Lib\Connector;
-use Timesheet\Lib\Logger;
-use Timesheet\Lib\Calculator;
+use InvoiceAutomation\Lib\Connector;
+use InvoiceAutomation\Lib\Logger;
+use InvoiceAutomation\Lib\Calculator;
 
 class InvoicesRemover
 {
@@ -26,7 +26,7 @@ class InvoicesRemover
      */
     public static function execute()
     {
-        Logger::log('Starting deleteing...');
+        Logger::log('Starting deleting...');
         $result = false;
         $connector = new Connector();
         // start DB connection
