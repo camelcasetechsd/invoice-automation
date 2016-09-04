@@ -17,3 +17,8 @@ Note:
 * invoice number is incremented unless invoice for same project and same month was generated before, then old invoice number will be reused
 * for any reason, invoices number can be reset by deleting entries that correspond to range of invoice numbers using script `php InvoicesRemover.php --from="2" --to="5"`
 * for any reason, invoices number can be incremented by adding entry with specific invoice number for specific project using script `php InvoicesAdder.php --number="2" --project="abcProject"`
+
+Kimai Customizations:
+
+To Add link in invoice tab inside timesheet project
+* replace main.tpl file in extensions/ki_invoice/templates inside kimai installation with the one here inside kimaiCustomizations dir.
