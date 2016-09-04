@@ -131,8 +131,8 @@ class Calculator
                 $timePerUser += $timePerDay;
             }
             $daysPerUser = ceil($timePerUser * 2 / 8) / 2; // ceil to nearest 0.5
-            $rateUSDPerUser = ceil($daysPerUser * 2 * $projectRate) / 2;
-            $rateGBPPerUser = ceil($rateUSDPerUser * 2 * $exchangeRate) / 2;
+            $rateUSDPerUser = number_format(($daysPerUser * $projectRate) ,2 );
+            $rateGBPPerUser = number_format(($rateUSDPerUser * 2 * $exchangeRate) ,2 );
             // set number of days, rates in USD and GBP
             $rateUSD += $rateUSDPerUser;
             $rateGBP += $rateGBPPerUser;
@@ -144,8 +144,8 @@ class Calculator
             );
         }
         $userRates = array_merge($userRates, array(
-            'rateUSD' => $rateUSD,
-            'rateGBP' => $rateGBP,
+            'rateUSD' => number_format($rateUSD ,2 ),
+            'rateGBP' => number_format($rateGBP ,2 ),
         ));
         return $userRates;
     }
