@@ -76,9 +76,13 @@ class Generator
 
         $results = Calculator::getResultsFromDatabase($connection, $firstDayOfTheMonth, $firstDayOfNextMonth, $projects);
         $resultsPerProject = array();
+        $usernames = array();
         // divide entries per users per projects
         foreach ($results as $result) {
-            $resultsPerProject[$result["pct_name"]][$result["usr_alias"]][] = $result;
+            if(! array_key_exists($result["usr_name"], $usernames)){
+                $usernames[$result["usr_name"]] = ucwords(str_replace(".", " ", $result["usr_name"]));
+            }
+            $resultsPerProject[$result["pct_name"]][$usernames[$result["usr_name"]]][] = $result;
         }
         // get days array in selected month
         $days = new \DatePeriod(
