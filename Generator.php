@@ -378,7 +378,10 @@ class Generator
     }
 
 }
-
+if( ! ini_get('date.timezone') )
+{
+    date_default_timezone_set('Africa/Cairo');
+}
 // execute export command
 $result = Generator::execute();
 // Based on the export result, we need to set the exit code

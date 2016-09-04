@@ -1,6 +1,5 @@
 <?php
 $config = require 'config/config.php';
-date_default_timezone_set('Africa/Cairo');
 
 $passwordPart = " ";
 if (!empty($config["db_password"])) {

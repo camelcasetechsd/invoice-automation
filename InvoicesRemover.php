@@ -109,7 +109,10 @@ class InvoicesRemover
         self::$options["to"] = (int)$options["to"];
     }
 }
-
+if( ! ini_get('date.timezone') )
+{
+    date_default_timezone_set('Africa/Cairo');
+}
 // execute delete command
 $result = InvoicesRemover::execute();
 // Based on the delete result, we need to set the exit code

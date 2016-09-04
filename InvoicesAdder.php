@@ -107,7 +107,10 @@ class InvoicesAdder
         self::$options["project"] = $options["project"];
     }
 }
-
+if( ! ini_get('date.timezone') )
+{
+    date_default_timezone_set('Africa/Cairo');
+}
 // execute add command
 $result = InvoicesAdder::execute();
 // Based on the addition result, we need to set the exit code
