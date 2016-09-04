@@ -11,12 +11,12 @@ class Invoice
      * @param PDO $connection database connection
      * @param int $invoiceNumber
      * @param int $projectId
-     * @param int $month ,default is 0
-     * @param int $year ,default is 0
+     * @param int $month ,default is false
+     * @param int $year ,default is false
      */
-    public static function add($connection, $invoiceNumber, $projectId, $month = 0, $year = 0)
+    public static function add($connection, $invoiceNumber, $projectId, $month = false, $year = false)
     {
-        if((int)$month == 0 || (int)$year == 0){
+        if($month === false || $year === false){
             $today = new \DateTime();
             $month = $today->format("m");
             $year = $today->format("Y");

@@ -71,7 +71,7 @@ class InvoicesAdder
         $number = self::$options["number"];
         $project = self::$options["project"];
         $today = new \DateTime();
-        $month = (int)$today->format("m") - 2;
+        $month = 0;
         $year = (int)$today->format("Y");
         $projectData = Project::getByName($connection, $project);
         Invoice::add($connection, $number, /*$projectId=*/ $projectData["pct_ID"], $month, $year);
