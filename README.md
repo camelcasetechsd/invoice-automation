@@ -11,3 +11,4 @@ Note:
 
 * invoice number is incremented unless invoice for same project and same month was generated before, then old invoice number will be reused
 * for any reason, invoices number can be reset by deleting entries that correspond to range of invoice numbers using script `php InvoicesRemover.php --from="2" --to="5"`
+* for any reason, invoices number can be incremented by adding entry with specific invoice number for specific project using script `php InvoicesAdder.php --number="2" --project="abcProject"`

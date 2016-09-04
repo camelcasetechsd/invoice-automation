@@ -2,6 +2,9 @@
 
 namespace InvoiceAutomation\Lib;
 
+require_once 'Lib/Invoice.php';
+use InvoiceAutomation\Lib\Invoice;
+
 class Calculator
 {
 
@@ -26,22 +29,6 @@ class Calculator
                 . "where z.zef_in between unix_timestamp('" . $firstDayOfTheMonth . " 00:00:00') and unix_timestamp('" . $firstDayOfNextMonth . " 00:00:00') $projectsWhereClause"
                 . "group by u.usr_name, p.pct_ID, r.rate, z.zef_in order by p.pct_name, u.usr_name, z.zef_in");
         return $query->fetchAll(\PDO::FETCH_ASSOC);
-    }
-    
-    /**
-     * Delete invoices from database using passed criteria
-     * @access public
-     * @param PDO $connection database connection
-     * @param int $from
-     * @param int $to
-     */
-    public static function deleteInvoices($connection, $from, $to)
-    {
-        $deletedInvoices = $connection->prepare("DELETE FROM `invoice` WHERE invoice_no >= :from and invoice_no <= :to");
-        $deletedInvoices->execute(array(
-            ':from' => $from,
-            ':to' => $to,
-        ));
     }
 
     /**
@@ -78,13 +65,7 @@ class Calculator
         }
         if($existingFlag === false){
             // insert invoice number in database
-            $newInvoice = $connection->prepare("INSERT INTO `invoice` (invoice_no, project_id, month, year) VALUES (:invoiceNumber, :projectId, :month, :year)");
-            $newInvoice->execute(array(
-                ':invoiceNumber' => $invoiceNumber,
-                ':projectId' => $projectId,
-                ':month' => $month,
-                ':year' => $year,
-            ));
+            Invoice::add($connection, $invoiceNumber, $projectId, $month, $year);
         }
         return $invoiceNumber;
     }

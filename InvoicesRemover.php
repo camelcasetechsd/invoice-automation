@@ -5,10 +5,10 @@ namespace InvoiceAutomation;
 require 'vendor/autoload.php';
 require 'Lib/Connector.php';
 require 'Lib/Logger.php';
-require 'Lib/Calculator.php';
+require 'Lib/Invoice.php';
 use InvoiceAutomation\Lib\Connector;
 use InvoiceAutomation\Lib\Logger;
-use InvoiceAutomation\Lib\Calculator;
+use InvoiceAutomation\Lib\Invoice;
 
 class InvoicesRemover
 {
@@ -69,7 +69,7 @@ class InvoicesRemover
         $from = self::$options["from"];
         $to = self::$options["to"];
         
-        Calculator::deleteInvoices($connection, $from, $to);
+        Invoice::delete($connection, $from, $to);
         return true;
     }
 
