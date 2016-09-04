@@ -1,5 +1,10 @@
 A script to generate Time sheet excel sheet and invoice documents from database
 
+Installation:
+
+* Run `composer install` to install dependencies
+* Edit config.php inside config dir. to hold actual DB credentials
+
 Generate sheets and invoices for previous month using script `php Generator.php`
 
 Main script can have some optional options:
