@@ -73,7 +73,7 @@ class Generator
         $firstDayOfTheMonth = self::$options["firstDayOfTheMonth"];
         $firstDayOfNextMonth = self::$options["firstDayOfNextMonth"];
         $projects = self::$options["projects"];
-        
+
         $results = Calculator::getResultsFromDatabase($connection, $firstDayOfTheMonth, $firstDayOfNextMonth, $projects);
         $resultsPerProject = array();
         // divide entries per users per projects
@@ -90,6 +90,8 @@ class Generator
         self::createExcelSheets($resultsPerProject, $days, $exchangeRate, $firstDayOfTheMonth);
         // generate invoice documents
         self::createInvoiceDocuments($connection, $resultsPerProject, $days, $exchangeRate);
+        // archive generated files
+        self::archiveDownloads();
         return true;
     }
 
@@ -243,11 +245,11 @@ class Generator
             $footerStyle = array(
                 'font' => array('bold' => true,),
             );
-            $footer = 'a'. ($entryIndex + 1) .':' . $usersLetters[$userLetterIndex - 1] . ($entryIndex + 3);
+            $footer = 'a' . ($entryIndex + 1) . ':' . $usersLetters[$userLetterIndex - 1] . ($entryIndex + 3);
             $secondExcelSheet->getStyle($footer)->applyFromArray($footerStyle);
             // save excel file
             $writer = \PHPExcel_IOFactory::createWriter($excel, 'Excel2007');
-            $writer->save('camelcase_timesheet_' . $project . '_' . self::$options["year"] . self::$options["month"] . '.xlsx');
+            $writer->save('downloads/timesheets/camelcase_timesheet_' . $project . '_' . self::$options["year"] . self::$options["month"] . '.xlsx');
         }
     }
 
@@ -322,11 +324,59 @@ class Generator
                 $exchangeRate
                     )
             );
-            
+
             // save document file
-            $document->saveAs('camelcase_invoice_' . $invoiceNumberPadded . '_' . $project . '_' . self::$options["year"] . self::$options["month"] . '.docx');
+            $document->saveAs('downloads/invoices/camelcase_invoice_' . $invoiceNumberPadded . '_' . $project . '_' . self::$options["year"] . self::$options["month"] . '.docx');
         }
     }
+
+    /**
+     * Archive and then delete generated files
+     * @access private
+     */
+    private static function archiveDownloads()
+    {
+        // Get real path for our downloads folder
+        $rootPath = realpath('downloads');
+
+        // Initialize archive object
+        $zip = new \ZipArchive();
+        $zip->open('downloads.zip', \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
+        // Initialize empty "delete list"
+        $filesToDelete = array();
+
+        // Create recursive directory iterator
+        /** @var SplFileInfo[] $files */
+        $files = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($rootPath), \RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($files as $name => $file) {
+            // Skip directories (they would be added automatically)
+            if (!$file->isDir() && $file->getFilename() != ".gitignore") {
+                // Get real and relative path for current file
+                $filePath = $file->getRealPath();
+                $relativePath = substr($filePath, strlen($rootPath) + 1);
+
+                // Add current file to archive
+                $zip->addFile($filePath, $relativePath);
+
+                // Add current file to "delete list"
+                // delete it later cause ZipArchive create archive only after calling close function and ZipArchive lock files until archive created)
+                $filesToDelete[] = $filePath;
+            }
+        }
+
+        // Zip archive will be created only after closing object
+        $zip->close();
+
+        // Delete all files from "delete list"
+        foreach ($filesToDelete as $file) {
+            unlink($file);
+        }
+    }
+
 }
 
 // execute export command

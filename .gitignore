@@ -5,3 +5,4 @@ nbproject
 *.xlsx
 *.docx
 !template/invoiceTemplate.docx
+downloads.zip
