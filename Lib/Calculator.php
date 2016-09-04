@@ -132,7 +132,7 @@ class Calculator
             }
             $daysPerUser = ceil($timePerUser * 2 / 8) / 2; // ceil to nearest 0.5
             $rateUSDPerUser = number_format(($daysPerUser * $projectRate) ,2 );
-            $rateGBPPerUser = number_format(($rateUSDPerUser * 2 * $exchangeRate) ,2 );
+            $rateGBPPerUser = number_format(($rateUSDPerUser * $exchangeRate) ,2 );
             // set number of days, rates in USD and GBP
             $rateUSD += $rateUSDPerUser;
             $rateGBP += $rateGBPPerUser;
