@@ -95,7 +95,7 @@ class Generator
         // generate invoice documents
         self::createInvoiceDocuments($connection, $resultsPerProject, $days, $exchangeRate);
         // archive generated files
-        self::archiveDownloads();
+        self::archiveDownloads($firstDayOfTheMonth);
         return true;
     }
 
@@ -344,15 +344,16 @@ class Generator
     /**
      * Archive and then delete generated files
      * @access private
+     * @param string $firstDayOfTheMonth
      */
-    private static function archiveDownloads()
+    private static function archiveDownloads($firstDayOfTheMonth)
     {
         // Get real path for our downloads folder
         $rootPath = realpath('downloads');
 
         // Initialize archive object
         $zip = new \ZipArchive();
-        $zip->open('downloads.zip', \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        $zip->open('downloads-'. date('Ym', strtotime($firstDayOfTheMonth)).'.zip', \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
         // Initialize empty "delete list"
         $filesToDelete = array();
