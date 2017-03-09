@@ -27,7 +27,7 @@ class Calculator
                 . "SELECT u.usr_name, u.usr_alias, k.knd_name, r.rate, p.pct_ID, p.pct_name, ROUND(sum(z.zef_time)/3600, 2) time_formatted, DATE_FORMAT(FROM_UNIXTIME(z.zef_in), '%d/%m/%Y') date_formatted "
                 . "FROM `ki_zef` z inner join `ki_pct` p on z.zef_pctID = p.pct_ID inner join `ki_knd` k on k.knd_ID = p.pct_kndID left join `ki_rates` r on r.project_id = p.pct_ID and r.user_id is null inner join `ki_usr` u on u.usr_ID = z.zef_usrID "
                 . "where z.zef_in between unix_timestamp('" . $firstDayOfTheMonth . " 00:00:00') and unix_timestamp('" . $firstDayOfNextMonth . " 00:00:00') $projectsWhereClause"
-                . "group by u.usr_name, p.pct_ID, r.rate, z.zef_in order by p.pct_name, u.usr_name, z.zef_in");
+                . "group by u.usr_name, p.pct_ID, r.rate, date_formatted order by p.pct_name, u.usr_name, date_formatted");
         return $query->fetchAll(\PDO::FETCH_ASSOC);
     }
 
@@ -73,12 +73,15 @@ class Calculator
     /**
      * Get current exchange rate
      * @access public
+     * @param string $firstDayOfTheMonth
      * @return float current rate
      */
-    public static function getExchangeRate()
+    public static function getExchangeRate($firstDayOfTheMonth)
     {
-        $exchangeRateResponse = file_get_contents("https://www.google.com/finance/converter?a=1&from=USD&to=GBP");
-        $exchangeRateResponseContents = explode("<span class=bld>", $exchangeRateResponse);
+        $lastDate  = date('t_m_Y',strtotime($firstDayOfTheMonth)); // get the last date of the same month in current year
+
+        $exchangeRateResponse = file_get_contents('http://www.exchangerates.org.uk/USD-GBP-'. $lastDate .'-exchange-rate-history.html');
+        $exchangeRateResponseContents = explode('<span id="shd2b;">', $exchangeRateResponse);
         $exchangeRateResponseContents = explode("</span>", $exchangeRateResponseContents[1]);
         return preg_replace("/[^0-9\.]/", null, $exchangeRateResponseContents[0]);
     }
@@ -112,8 +115,11 @@ class Calculator
      */
     public static function getUserRates($projectEntries, $days, $projectRate, $exchangeRate)
     {
-        $rateUSD = 0.0;
-        $rateGBP = 0.0;
+        $rateUSD    = 0.0;
+        $rateGBP    = 0.0;
+        $totalTimes = 0.0;
+        $totalDays  = 0.0;
+
         foreach ($projectEntries as $userName => $userEntries) {
             $timePerUser = 0.0;
             $timesPerUser = array();
@@ -121,7 +127,7 @@ class Calculator
             foreach ($days as $day) {
                 $formattedDay = $day->format("d/m/Y");
                 $timePerDay = 0.0;
-                // calculate time per day per user 
+                // calculate time per day per user
                 foreach ($userEntries as $singleEntry) {
                     if ($formattedDay == $singleEntry["date_formatted"]) {
                         $timePerDay += $singleEntry["time_formatted"];
@@ -130,22 +136,29 @@ class Calculator
                 $timesPerUser[$formattedDay] = $timePerDay;
                 $timePerUser += $timePerDay;
             }
-            $daysPerUser = ceil($timePerUser * 2 / 8) / 2; // ceil to nearest 0.5
-            $rateUSDPerUser = number_format(($daysPerUser * $projectRate) ,2 , /*$dec_point =*/ "." , /*$thousands_sep =*/ "");
+            $timePerUser = Round($timePerUser); //round it to nearest integer value
+            $daysPerUser = Round((Round($timePerUser)/8), 2); // ceil to nearest 0.5
+            $rateUSDPerUser = number_format(($timePerUser * $projectRate) ,2 , /*$dec_point =*/ "." , /*$thousands_sep =*/ "");
             $rateGBPPerUser = number_format(($rateUSDPerUser * $exchangeRate) ,2 , /*$dec_point =*/ "." , /*$thousands_sep =*/ "");
             // set number of days, rates in USD and GBP
-            $rateUSD += $rateUSDPerUser;
-            $rateGBP += $rateGBPPerUser;
+            $rateUSD    += $rateUSDPerUser;
+            $rateGBP    += $rateGBPPerUser;
+            $totalTimes += $timePerUser;
+            $totalDays  += $daysPerUser;
+
             $userRates["users"][$userName] = array(
-                'times' => $timesPerUser,
-                'days' => $daysPerUser,
-                'rateUSD' => $rateUSDPerUser,
-                'rateGBP' => $rateGBPPerUser,
+                'hours'      => $timesPerUser,
+                'totalTime'  => $timePerUser,
+                'days'       => $daysPerUser,
+                'rateUSD'    => $rateUSDPerUser,
+                'rateGBP'    => $rateGBPPerUser,
             );
         }
         $userRates = array_merge($userRates, array(
-            'rateUSD' => number_format($rateUSD ,2 , /*$dec_point =*/ "." , /*$thousands_sep =*/ ""),
-            'rateGBP' => number_format($rateGBP ,2 , /*$dec_point =*/ "." , /*$thousands_sep =*/ ""),
+            'rateUSD'   => number_format($rateUSD ,2 , /*$dec_point =*/ "." , /*$thousands_sep =*/ ""),
+            'rateGBP'   => number_format($rateGBP ,2 , /*$dec_point =*/ "." , /*$thousands_sep =*/ ""),
+            'totalTime' => number_format($totalTimes ,2 , /*$dec_point =*/ "." , /*$thousands_sep =*/ ""),
+            'days'      => number_format($totalDays ,2 , /*$dec_point =*/ "." , /*$thousands_sep =*/ ""),
         ));
         return $userRates;
     }

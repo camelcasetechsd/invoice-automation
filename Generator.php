@@ -89,7 +89,7 @@ class Generator
                 new \DateTime($firstDayOfTheMonth), new \DateInterval('P1D'), new \DateTime($firstDayOfNextMonth)
         );
         // get USD GBP exchange rate
-        $exchangeRate = Calculator::getExchangeRate();
+        $exchangeRate = Calculator::getExchangeRate($firstDayOfTheMonth);
         // generate excel sheet
         self::createExcelSheets($resultsPerProject, $days, $exchangeRate, $firstDayOfTheMonth);
         // generate invoice documents
@@ -114,7 +114,7 @@ class Generator
         );
         $options = getopt(/* $shortopts = */ "", $longOptions);
         if (!array_key_exists('date', $options)) {
-            // set reports time range as last month 
+            // set reports time range as last month
             // starting from first day in last month till current month start
             $month = date("m") - 1;
             if ($month < 10) {
@@ -187,13 +187,15 @@ class Generator
             $usersRates = Calculator::getUserRates($result, $days, $projectRate, $exchangeRate);
             $userLetterIndex = 0;
             foreach ($usersRates["users"] as $userName => $usersRate) {
+
                 // add user name in header
                 $userLetter = $usersLetters[$userLetterIndex];
                 $secondExcelSheet->setCellValue($userLetter . '1', $userName);
                 $insertedDaysInDateColumn = array();
                 // loop on days per user
                 $dayIndex = 0;
-                foreach ($usersRate["times"] as $formattedDay => $timePerDay) {
+
+                foreach ($usersRate["hours"] as $formattedDay => $timePerDay) {
                     $entryIndex = 2 + (int) $dayIndex;
                     if (!in_array($formattedDay, $insertedDaysInDateColumn)) {
                         $secondExcelSheet->setCellValue('b' . $entryIndex, $formattedDay);
@@ -203,21 +205,26 @@ class Generator
                     $dayIndex++;
                 }
                 // set number of days, rates in USD and GBP
-                $secondExcelSheet->setCellValue($userLetter . ($entryIndex + 1), $usersRate["days"]);
+                $secondExcelSheet->setCellValue($userLetter . ($entryIndex + 1), $usersRate["totalTime"]);
                 $secondExcelSheet->setCellValue($userLetter . ($entryIndex + 2), $usersRate["rateUSD"]);
                 $secondExcelSheet->setCellValue($userLetter . ($entryIndex + 3), $usersRate["rateGBP"]);
                 $userLetterIndex++;
             }
             // add days and rates titles beside exchange rate
-            $secondExcelSheet->setCellValue('a' . ($entryIndex + 1), "Total Days");
+            $secondExcelSheet->setCellValue('a' . ($entryIndex + 1), "Total Hours");
+            $secondExcelSheet->setCellValue('b' . ($entryIndex + 1), $usersRates['totalTime']);
             $secondExcelSheet->setCellValue('a' . ($entryIndex + 2), "Total Rate ($)");
+            $secondExcelSheet->setCellValue('b' . ($entryIndex + 2), $usersRates['rateUSD']);
             $secondExcelSheet->setCellValue('a' . ($entryIndex + 3), "Total Rate (£)");
-            $secondExcelSheet->setCellValue('a' . ($entryIndex + 4), "\$→£ (" . $today . ")");
+            $secondExcelSheet->setCellValue('b' . ($entryIndex + 3), $usersRates['rateGBP']);
+            $secondExcelSheet->setCellValue('a' . ($entryIndex + 4), "\$→£ (" . date('t/m/Y', strtotime($firstDayOfTheMonth)) . ")");
             $secondExcelSheet->setCellValue('b' . ($entryIndex + 4), $exchangeRate);
             // set all columns to autosize
             for ($col = ord('a'); $col <= ord($usersLetters[$userLetterIndex]); $col++) {
                 $secondExcelSheet->getColumnDimension(chr($col))->setAutoSize(true);
             }
+
+
             // merge month column cells
             $secondExcelSheet->mergeCells('a2:a' . $entryIndex);
             // set header style
@@ -294,11 +301,11 @@ class Generator
             $userPosition = 1;
             foreach ($userRates["users"] as $userName => $userRate) {
                 $document->setValue("teamMemberName#" . $userPosition, $userName);
-                $document->setValue("teamMemberDays#" . $userPosition, $userRate["days"]);
+                $document->setValue("teamMemberHours#" . $userPosition, $userRate["totalTime"]);
                 $userPosition++;
             }
             $firstUserRate = reset($userRates["users"]);
-            $daysDates = array_keys($firstUserRate["times"]);
+            $daysDates = array_keys($firstUserRate["hours"]);
             // prepare invoice number
             $invoiceNumber = Calculator::prepareInvoiceNumber($connection, $projectId, self::$options["month"], self::$options["year"]);
             $invoiceNumberPadded = str_pad($invoiceNumber, 6, '0', STR_PAD_LEFT);
@@ -394,4 +401,4 @@ if ($result === true) {
 }
 else {
     exit(1); // exitcode 1 = error
-}   
+}
